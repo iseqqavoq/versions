@@ -25,6 +25,8 @@ class Versions
         add_action( 'admin_init', array( __CLASS__, 'plugin_admin_init' ) );
         add_action( 'admin_menu', array( __CLASS__, 'add_menus' ) );
 
+        self::add_text_domain();
+
         if(!is_admin()){
             $activation = (array) get_option( 'versions_activation_setting_name' );
             if( strcmp ( $activation[0] , 'yes' ) == 0 ) {
@@ -254,7 +256,7 @@ class Versions
             'id' => 'versions_activation_setting_name',
             'type' => 'radio',
             'desc' => __( 'Activate Versions by selecting \'Yes\' and deactivate by selecting \'No\'.', 'versions' ),
-            'options' => array('yes' => 'Yes', 'no' => 'No'),
+            'options' => array('yes' => __('Yes', 'versions'), 'no' => __('No', 'versions')),
             'std' => 'no'
         );
 
@@ -312,6 +314,18 @@ class Versions
         }
         echo '<div>'.$value['desc'].'</div>';
     }
+    
+    /**
+	 * Load the text domain for the plugin in order to work with localzation.
+	 *
+	 */
+	public static function add_text_domain()
+	{
+		$domain = 'versions';
+		$path 	= dirname( plugin_basename( __FILE__ ) ) . '/languages/';
+		
+		load_plugin_textdomain( $domain, false, $path );
+	}
 }
 
 Versions::init();
