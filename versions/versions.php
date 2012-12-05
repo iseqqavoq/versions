@@ -22,10 +22,23 @@ class Versions
 	 */
 	public static function init()
 	{
-		add_action( 'wp_print_scripts', array( __CLASS__, 'handle_enqueued_scripts' ), 999);
-		add_action( 'wp_print_styles', array( __CLASS__, 'handle_enqueued_styles' ), 999);
-		add_action( 'plugins_loaded', array( __CLASS__, 'start_html_buffer' ) );
-		add_action( 'wp_footer', array( __CLASS__, 'stop_html_buffer' ) );
+        add_action( 'admin_init', array( __CLASS__, 'plugin_admin_init' ) );
+        add_action( 'admin_menu', array( __CLASS__, 'add_menus' ) );
+
+        if(!is_admin()){
+            $activation = (array) get_option( 'versions_activation_setting_name' );
+            if( strcmp ( $activation[0] , 'yes' ) == 0 ) {
+                $filter = (array) get_option( 'versions_filter_setting_name' );
+                if( strcmp ( $filter[0] , 'default' ) == 0 ) {
+                    add_action( 'plugins_loaded', array( __CLASS__, 'start_html_buffer' ) );
+                    add_action( 'wp_footer', array( __CLASS__, 'stop_html_buffer' ) );
+                }
+                else if( strcmp ( $filter[0] , 'advanced' ) == 0 ) {
+                    add_action( 'wp_print_scripts', array( __CLASS__, 'handle_enqueued_scripts' ), 999);
+                    add_action( 'wp_print_styles', array( __CLASS__, 'handle_enqueued_styles' ), 999);
+                }
+            }
+        }
 	}
 	
 	/**
@@ -181,6 +194,124 @@ class Versions
 		
 		return (file_exists($filePath)) ? $filePath : FALSE; // Returns filePath if file exists and FALSE if not.
 	}
+
+    /**
+     * Initialize the admin setting for Versions
+     *
+     * @access	public
+     */
+	public static function plugin_admin_init()
+	{
+        register_setting( 'versions_group', 'versions_activation_setting_name' );
+        register_setting( 'versions_group', 'versions_filter_setting_name' );
+
+	    add_settings_section( 'versions_settings_section', __( 'Versions Settings', 'versions' ), array( __CLASS__, 'versions_settings_section_callback') , 'versions' );
+        add_settings_field( 'versions_activation_setting_name', __( 'Activate Versions', 'versions' ), array( __CLASS__, 'versions_activation_setting_callback') , 'versions', 'versions_settings_section' );
+        add_settings_field( 'versions_filter_setting_name', __( 'Filter method', 'versions' ), array( __CLASS__, 'versions_filter_setting_callback') , 'versions', 'versions_settings_section' );
+
+	}
+
+    /**
+     * Add the Versions options page
+     *
+     * @access	public
+     */
+	public static function add_menus()
+	{
+        add_options_page( __( 'Versions Settings', 'versions' ), __( 'Versions Settings', 'versions' ), 'manage_options', 'versions', array( __CLASS__, 'versions_submenu_callback' ) );
+	}
+
+    /**
+     * Callback for the Versions options page
+     *
+     * @access	public
+     */
+	public static function versions_submenu_callback()
+	{ ?>
+	    <div class='wrap'>
+	        <h2><?php _e( 'Versions', 'versions' ) ?></h2>
+	        <form method='POST' action='options.php'>
+                <?php
+                    settings_fields( 'versions_group' );
+                    do_settings_sections( 'versions' );
+                ?>
+                <p><?php _e( 'For any questions related to the Versions plugin, check out the plugin\'s page and support forum at <a href="http://wordpress.org/extend/plugins/versions" target="_blank">WordPress</a> or the plugin\'s page at <a href="http://www.iqq.se/" target="_blank">Iseqqavoq.se.</a>', 'versions' ) ?></p>
+                <p class='submit'>
+                    <input name='submit' type='submit' id='submit' class='button-primary' value='<?php _e("Save Changes") ?>' />
+                </p>
+	        </form>
+	    </div>
+    <?php }
+
+    /**
+     * Callback for the "Activation" setting on the Versions options page
+     *
+     * @access	public
+     */
+    public static function versions_activation_setting_callback()
+	{
+        $options = array('name' => 'Activate Versions',
+            'id' => 'versions_activation_setting_name',
+            'type' => 'radio',
+            'desc' => __( 'Activate Versions by selecting \'Yes\' and deactivate by selecting \'No\'.', 'versions' ),
+            'options' => array('yes' => 'Yes', 'no' => 'No'),
+            'std' => 'no'
+        );
+
+        Versions::create_section_for_radio($options);
+    }
+
+    /**
+     * Callback for the "Filter method" setting on the Versions options page
+     *
+     * @access	public
+     */
+    public static function versions_filter_setting_callback()
+    {
+        $options = array('name' => 'Filter Method',
+            'id' => 'versions_filter_setting_name',
+            'type' => 'radio',
+            'desc' => __( 'Choose filter method.<br /><strong>Default:</strong> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas blandit neque vitae tortor egestas fringilla. Curabitur aliquet porttitor ligula quis molestie. Praesent commodo ipsum imperdiet risus malesuada sed sodales massa sollicitudin. Fusce malesuada vulputate dictum.<br /><strong>Advanced:</strong> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas blandit neque vitae tortor egestas fringilla. Curabitur aliquet porttitor ligula quis molestie. Praesent commodo ipsum imperdiet risus malesuada sed sodales massa sollicitudin. Fusce malesuada vulputate dictum.', 'versions' ),
+            'options' => array('default' => __( 'Default', 'versions' ), 'advanced' => __( 'Advanced', 'versions' )),
+            'std' => 'default'
+        );
+
+        Versions::create_section_for_radio($options);
+    }
+
+    /**
+     * Callback for the section on the Versions options page
+     *
+     * @access	public
+     */
+	public static function versions_settings_section_callback()
+	{
+
+    }
+
+    /**
+     * Create radio buttons for Versions options page
+     *
+     * @access	public
+     * @param	array
+     */
+    public static function create_section_for_radio($value) {
+        foreach ($value['options'] as $option_value => $option_text) {
+            $checked = ' ';
+            if (get_option($value['id']) == $option_value) {
+                $checked = ' checked="checked" ';
+            }
+            else if (get_option($value['id']) === FALSE && $value['std'] == $option_value){
+                $checked = ' checked="checked" ';
+            }
+            else {
+                $checked = ' ';
+            }
+            echo '<div class="versions-radio"><input type="radio" name="'.$value['id'].'" value="'.
+                $option_value.'" '.$checked."/>".$option_text."</div>";
+        }
+        echo '<div>'.$value['desc'].'</div>';
+    }
 }
 
 Versions::init();
