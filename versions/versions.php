@@ -231,7 +231,8 @@ class Versions
 	public static function versions_submenu_callback()
 	{ ?>
 	    <div class='wrap'>
-	        <h2><?php _e( 'Versions', 'versions' ) ?></h2>
+	    	<div id="icon-options-general" class="icon32"></div>
+	        <h2><?php _e( 'Versions settings', 'versions' ) ?></h2>
 	        <form method='POST' action='options.php'>
                 <?php
                     settings_fields( 'versions_group' );
@@ -252,12 +253,20 @@ class Versions
      */
     public static function versions_activation_setting_callback()
 	{
-        $options = array('name' => 'Activate Versions',
-            'id' => 'versions_activation_setting_name',
-            'type' => 'radio',
-            'desc' => __( 'Activate Versions by selecting \'Yes\' and deactivate by selecting \'No\'.', 'versions' ),
-            'options' => array('yes' => __('Yes', 'versions'), 'no' => __('No', 'versions')),
-            'std' => 'no'
+        $options = array(
+        	'name' 		=> 'Activate Versions',
+            'id' 		=> 'versions_activation_setting_name',
+            'type' 		=> 'radio',
+            'desc' 		=> __( 'Activate Versions by selecting \'Yes\' and deactivate by selecting \'No\'.', 'versions' ),
+            'options' 	=> array(
+            	'yes' 		=> array(
+            		'label' 		=> __('Yes', 'versions')
+            	),
+            	'no' 		=> array(
+            		'label'			=> __('No', 'versions')
+            	),
+            ),
+            'std' 		=> 'no'
         );
 
         Versions::create_section_for_radio($options);
@@ -270,12 +279,21 @@ class Versions
      */
     public static function versions_filter_setting_callback()
     {
-        $options = array('name' => 'Filter Method',
-            'id' => 'versions_filter_setting_name',
-            'type' => 'radio',
-            'desc' => __( 'Choose filter method.<br /><strong>Default:</strong> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas blandit neque vitae tortor egestas fringilla. Curabitur aliquet porttitor ligula quis molestie. Praesent commodo ipsum imperdiet risus malesuada sed sodales massa sollicitudin. Fusce malesuada vulputate dictum.<br /><strong>Advanced:</strong> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas blandit neque vitae tortor egestas fringilla. Curabitur aliquet porttitor ligula quis molestie. Praesent commodo ipsum imperdiet risus malesuada sed sodales massa sollicitudin. Fusce malesuada vulputate dictum.', 'versions' ),
-            'options' => array('default' => __( 'Default', 'versions' ), 'advanced' => __( 'Advanced', 'versions' )),
-            'std' => 'default'
+        $options = array(
+        	'name' 		=> 'Filter Method',
+            'id' 		=> 'versions_filter_setting_name',
+            'type' 		=> 'radio',
+            'options' 	=> array(
+            	'default' 	=> array(
+            		'label' 		=> __( 'Default', 'versions' ),
+            		'description' 	=> __( 'The default method filters through all of the HTML before it is sent to the browser. It detects and alters script- and link-tags that need a good looking, automated version number. This is the preffered method to use if you do not have a deeper understanding of the code in your theme and/or plugins.', 'versions' )
+            	),
+            	'advanced' 	=> array(
+            		'label'			=> __( 'Advanced', 'versions' ),
+            		'description' 	=> __( 'Use this method if you know that all of your scripts and styles are registered and enqueued from your theme and/or plugins. It alters only script and stylesheet versions through the global scripts and styles arrays. Since it consumes a little less memory and time in execution it is aimed mainly to users who have a deeper insight in the code of the theme and/or plugins.', 'versions' )
+            	)
+            ),
+            'std' 		=> 'default'
         );
 
         Versions::create_section_for_radio($options);
@@ -298,21 +316,27 @@ class Versions
      * @param	array
      */
     public static function create_section_for_radio($value) {
-        foreach ($value['options'] as $option_value => $option_text) {
+        foreach ($value['options'] as $option_name => $option_data) {
             $checked = ' ';
-            if (get_option($value['id']) == $option_value) {
+            if (get_option($value['id']) == $option_name) {
                 $checked = ' checked="checked" ';
             }
-            else if (get_option($value['id']) === FALSE && $value['std'] == $option_value){
+            else if (get_option($value['id']) === FALSE && $value['std'] == $option_name){
                 $checked = ' checked="checked" ';
             }
             else {
                 $checked = ' ';
             }
-            echo '<div class="versions-radio"><input type="radio" name="'.$value['id'].'" value="'.
-                $option_value.'" '.$checked."/>".$option_text."</div>";
+            
+            $output = '<div class="versions-radio">';
+            $output .= '<label>';
+            $output .= '<input type="radio" name="'.$value['id'].'" value="'.$option_name.'"'.$checked.'"/>';
+            $output .= '<span>'.$option_data['label'].'</span></label>';
+            $output .= (isset($option_data['description']) && $option_data['description']) ? '<p>'.$option_data['description'].'</p>' : '';
+            $output .= '</div>';
+            
+            echo $output;
         }
-        echo '<div>'.$value['desc'].'</div>';
     }
     
     /**
