@@ -28,7 +28,7 @@ class Versions
 
         self::add_text_domain(); // Add text domain for localization.
 
-        if(!is_admin())
+        if(!is_admin() && !self::is_login_page())
         {
             $activation = (array) get_option( 'versions_activation_setting' );
             if( strcmp ( $activation[0] , 'yes' ) == 0 )
@@ -481,6 +481,11 @@ class Versions
 		$path 	= dirname( plugin_basename( __FILE__ ) ) . '/languages/';
 		
 		load_plugin_textdomain( $domain, false, $path );
+	}
+	
+	public static function is_login_page()
+	{
+	    return in_array($GLOBALS['pagenow'], array('wp-login.php', 'wp-register.php'));
 	}
 }
 
