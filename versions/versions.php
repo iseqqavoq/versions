@@ -21,6 +21,8 @@ class Versions
 	 */
 	public static function init()
 	{
+		register_activation_hook( __FILE__, array( __CLASS__, 'activate_plugin' ) );
+		
         add_action( 'admin_init', array( __CLASS__, 'plugin_admin_init' ) );
         add_action( 'admin_menu', array( __CLASS__, 'add_menus' ) );
 
@@ -28,10 +30,10 @@ class Versions
 
         if(!is_admin())
         {
-            $activation = (array) get_option( 'versions_activation_setting_name' );
+            $activation = (array) get_option( 'versions_activation_setting' );
             if( strcmp ( $activation[0] , 'yes' ) == 0 )
             {
-                $filter = (array) get_option( 'versions_filter_setting_name' );
+                $filter = (array) get_option( 'versions_filter_setting' );
                 if( strcmp ( $filter[0] , 'default' ) == 0 )
                 {
 	                add_action( 'plugins_loaded', array( __CLASS__, 'start_html_buffer' ) );
@@ -47,6 +49,27 @@ class Versions
 	}
 	
 	/**
+	 * Set options that need to exist.
+	 */
+	public static function activate_plugin()
+	{
+		if(!get_option('versions_catch_all_setting'))
+		{
+			update_option('versions_catch_all_setting', 'active');
+		}
+		
+		if(!get_option('versions_filter_setting'))
+		{
+			update_option('versions_filter_setting', 'yes');
+		}
+		
+		if(!get_option('versions_activation_setting'))
+		{
+			update_option('versions_activation_setting', 'default');
+		}
+	}
+	
+	/**
 	 * Check which scripts in script queue are in need of an altered version number and alter it.
 	 */
 	public static function handle_enqueued_scripts()
@@ -55,7 +78,7 @@ class Versions
 		global $wp_scripts;
 		if($wp_scripts)
 		{
-			$catchAll 			= get_option('versions_catch_all_setting_name');
+			$catchAll 			= get_option('versions_catch_all_setting');
 			$handledScripts 	= array();
 			$queuedScripts 		= $wp_scripts->queue;
 			$scriptsToHandle 	= $queuedScripts;
@@ -97,7 +120,7 @@ class Versions
 		global $wp_styles;
 		if($wp_styles)
 		{
-			$catchAll 			= get_option('versions_catch_all_setting_name');
+			$catchAll 			= get_option('versions_catch_all_setting');
 			$handledStyles 		= array();
 			$queuedStyles 		= $wp_styles->queue;
 			$stylesToHandle 	= $queuedStyles;
@@ -151,7 +174,7 @@ class Versions
 	{
 		include_once('simple_html_dom.php');
 		
-		$catchAll = get_option('versions_catch_all_setting_name');
+		$catchAll = get_option('versions_catch_all_setting');
 		
 		$html = str_get_html($buffer);
 		
@@ -257,14 +280,14 @@ class Versions
      */
 	public static function plugin_admin_init()
 	{
-        register_setting( 'versions_group', 'versions_activation_setting_name' );
-        register_setting( 'versions_group', 'versions_filter_setting_name' );
-        register_setting( 'versions_group', 'versions_catch_all_setting_name' );
+        register_setting( 'versions_group', 'versions_activation_setting' );
+        register_setting( 'versions_group', 'versions_filter_setting' );
+        register_setting( 'versions_group', 'versions_catch_all_setting' );
 
 	    add_settings_section( 'versions_settings_section', __( 'Versions Settings', 'versions' ), array( __CLASS__, 'versions_settings_section_callback') , 'versions' );
-        add_settings_field( 'versions_activation_setting_name', __( 'Activate Versions', 'versions' ), array( __CLASS__, 'versions_activation_setting_callback') , 'versions', 'versions_settings_section' );
-        add_settings_field( 'versions_filter_setting_name', __( 'Filter method', 'versions' ), array( __CLASS__, 'versions_filter_setting_callback') , 'versions', 'versions_settings_section' );
-        add_settings_field( 'versions_catch_all_setting_name', __( 'Catch all', 'versions' ), array( __CLASS__, 'versions_catch_all_setting_callback') , 'versions', 'versions_settings_section' );
+        add_settings_field( 'versions_activation_setting', __( 'Activate Versions', 'versions' ), array( __CLASS__, 'versions_activation_setting_callback') , 'versions', 'versions_settings_section' );
+        add_settings_field( 'versions_filter_setting', __( 'Filter method', 'versions' ), array( __CLASS__, 'versions_filter_setting_callback') , 'versions', 'versions_settings_section' );
+        add_settings_field( 'versions_catch_all_setting', __( 'Catch all', 'versions' ), array( __CLASS__, 'versions_catch_all_setting_callback') , 'versions', 'versions_settings_section' );
 
 	}
 
@@ -310,7 +333,7 @@ class Versions
 	{
         $options = array(
         	'name' 		=> 'Activate Versions',
-            'id' 		=> 'versions_activation_setting_name',
+            'id' 		=> 'versions_activation_setting',
             'type' 		=> 'radio',
             'options' 	=> array(
             	'yes' 		=> array(
@@ -335,7 +358,7 @@ class Versions
     {
         $options = array(
         	'name' 		=> 'Filter Method',
-            'id' 		=> 'versions_filter_setting_name',
+            'id' 		=> 'versions_filter_setting',
             'type' 		=> 'radio',
             'options' 	=> array(
             	'default' 	=> array(
@@ -362,7 +385,7 @@ class Versions
     {
         $options = array(
         	'name' 		=> 'Catch all',
-            'id' 		=> 'versions_catch_all_setting_name',
+            'id' 		=> 'versions_catch_all_setting',
             'type' 		=> 'checkbox',
             'options' 	=> array(
             	'active' 	=> array(
