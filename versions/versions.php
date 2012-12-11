@@ -53,19 +53,19 @@ class Versions
 	 */
 	public static function activate_plugin()
 	{
-		if(!get_option('versions_catch_all_setting'))
+		if(!get_option('versions_activation_setting'))
 		{
-			update_option('versions_catch_all_setting', 'active');
+			update_option('versions_activation_setting', 'yes');
 		}
 		
 		if(!get_option('versions_filter_setting'))
 		{
-			update_option('versions_filter_setting', 'yes');
+			update_option('versions_filter_setting', 'default');
 		}
 		
-		if(!get_option('versions_activation_setting'))
+		if(!get_option('versions_catch_all_setting'))
 		{
-			update_option('versions_activation_setting', 'default');
+			update_option('versions_catch_all_setting', 'active');
 		}
 	}
 	
