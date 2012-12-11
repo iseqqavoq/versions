@@ -14,7 +14,6 @@ License:
  *
  * @author	Iseqqavoq
  */
-
 class Versions
 {
 	/**
@@ -25,17 +24,21 @@ class Versions
         add_action( 'admin_init', array( __CLASS__, 'plugin_admin_init' ) );
         add_action( 'admin_menu', array( __CLASS__, 'add_menus' ) );
 
-        self::add_text_domain();
+        self::add_text_domain(); // Add text domain for localization.
 
-        if(!is_admin()){
+        if(!is_admin())
+        {
             $activation = (array) get_option( 'versions_activation_setting_name' );
-            if( strcmp ( $activation[0] , 'yes' ) == 0 ) {
+            if( strcmp ( $activation[0] , 'yes' ) == 0 )
+            {
                 $filter = (array) get_option( 'versions_filter_setting_name' );
-                if( strcmp ( $filter[0] , 'default' ) == 0 ) {
-                    add_action( 'plugins_loaded', array( __CLASS__, 'start_html_buffer' ) );
+                if( strcmp ( $filter[0] , 'default' ) == 0 )
+                {
+	                add_action( 'plugins_loaded', array( __CLASS__, 'start_html_buffer' ) );
                     add_action( 'wp_footer', array( __CLASS__, 'stop_html_buffer' ) );
                 }
-                else if( strcmp ( $filter[0] , 'advanced' ) == 0 ) {
+                else if( strcmp ( $filter[0] , 'advanced' ) == 0 )
+                {
                     add_action( 'wp_print_scripts', array( __CLASS__, 'handle_enqueued_scripts' ), 999);
                     add_action( 'wp_print_styles', array( __CLASS__, 'handle_enqueued_styles' ), 999);
                 }
@@ -52,19 +55,36 @@ class Versions
 		global $wp_scripts;
 		if($wp_scripts)
 		{
-			foreach($wp_scripts->registered as $handle => $args)
+			$catchAll 			= get_option('versions_catch_all_setting_name');
+			$handledScripts 	= array();
+			$queuedScripts 		= $wp_scripts->queue;
+			$scriptsToHandle 	= $queuedScripts;
+		
+			// Finalize array of scripts to handle, including dependencies.	
+			foreach($queuedScripts as $handle)
 			{
-				if( in_array($handle, $wp_scripts->queue ) )
+				if(sizeof($wp_scripts->registered[$handle]->deps) > 0)
 				{
-					if(!$wp_scripts->registered[$handle]->ver)
+					foreach($wp_scripts->registered[$handle]->deps as $dep)
 					{
-						$versionNumber = self::generate_version_number($wp_scripts->registered[$handle]->src);
-						
-						if($versionNumber)
+						if(!in_array($dep, $scriptsToHandle))
 						{
-							$wp_scripts->registered[$handle]->ver = $versionNumber;
+							array_push($scriptsToHandle, $dep);
 						}
 					}
+				}
+			}
+			
+			foreach($scriptsToHandle as $scriptHandle)
+			{			
+				if(!$wp_scripts->registered[$scriptHandle]->ver || $catchAll === 'active')
+				{
+				    $versionNumber = self::generate_version_number($wp_scripts->registered[$scriptHandle]->src);
+				    
+				    if($versionNumber)
+				    {
+				    	$wp_scripts->registered[$scriptHandle]->ver = $versionNumber;
+				    }
 				}
 			}			
 		}
@@ -73,21 +93,40 @@ class Versions
 	public static function handle_enqueued_styles()
 	{
 		if(is_admin()) return; // If in backoffice, abort.
+
 		global $wp_styles;
 		if($wp_styles)
 		{
-			foreach($wp_styles->registered as $handle => $args)
+			$catchAll 			= get_option('versions_catch_all_setting_name');
+			$handledStyles 		= array();
+			$queuedStyles 		= $wp_styles->queue;
+			$stylesToHandle 	= $queuedStyles;
+		
+			// Finalize array of scripts to handle, including dependencies.	
+			foreach($queuedStyles as $handle)
 			{
-				if( in_array($handle, $wp_styles->queue ) )
+				if(sizeof($wp_styles->registered[$handle]->deps) > 0)
 				{
-					if(!$wp_styles->registered[$handle]->ver)
+					foreach($wp_styles->registered[$handle]->deps as $dep)
 					{
-						$versionNumber = self::generate_version_number($wp_styles->registered[$handle]->src);
-						if($versionNumber)
+						if(!in_array($dep, $stylesToHandle))
 						{
-							$wp_styles->registered[$handle]->ver = $versionNumber;
+							array_push($stylesToHandle, $dep);
 						}
 					}
+				}
+			}
+			
+			foreach($stylesToHandle as $styleHandle)
+			{			
+				if(!$wp_styles->registered[$styleHandle]->ver || $catchAll === 'active')
+				{
+				    $versionNumber = self::generate_version_number($wp_styles->registered[$styleHandle]->src);
+				    
+				    if($versionNumber)
+				    {
+				    	$wp_styles->registered[$styleHandle]->ver = $versionNumber;
+				    }
 				}
 			}			
 		}
@@ -111,39 +150,51 @@ class Versions
 	public static function filter_output( $buffer )
 	{
 		include_once('simple_html_dom.php');
+		
+		$catchAll = get_option('versions_catch_all_setting_name');
+		
 		$html = str_get_html($buffer);
 		
 		$links = $html->find('link');
 		
-		$regexp = '/\.css$/';
-		
 		foreach($links as $index => $value)
 		{
-			if(preg_match($regexp, $links[$index]->href)) // If link is a css file...
+			$url 		= $links[$index]->href;
+			$urlQuery	= parse_url($url, PHP_URL_QUERY);
+
+			if((!isset($urlQuery['ver']) && !isset($urlQuery['v']) && !isset($urlQuery['version'])) || $catchAll === 'active')
 			{
+				parse_str($urlQuery, $queryArray);
+				
 				$versionNumber = self::generate_version_number($links[$index]->href);
 				if($versionNumber)
 				{
-					$links[$index]->href .= '?ver=' . $versionNumber;
+				    $delimiter = (sizeof($urlQuery) > 0) ? '&' : '?';
+				    $links[$index]->href .= $delimiter . 'versions=' . $versionNumber;
 				}
 			}
 		}
 		
 		$scripts = $html->find('script');
-		
-		$regexp = '/\.js$/';
-		
+				
 		foreach($scripts as $index => $value)
 		{
-			if(preg_match($regexp, $links[$index]->href)) // If link is a js file...
+			if(!$scripts[$index]->src) continue; // If not an external script, skip loop.
+			$url 		= $scripts[$index]->src;
+			$urlQuery	= parse_url($url, PHP_URL_QUERY);
+
+			if((!isset($urlQuery['ver']) && !isset($urlQuery['v']) && !isset($urlQuery['version'])) || $catchAll === 'active')
 			{
-				$versionNumber = self::generate_version_number($scripts[$index]->href);
+				parse_str($urlQuery, $queryArray);
+				
+				$versionNumber = self::generate_version_number($scripts[$index]->src);
 				if($versionNumber)
 				{
-					$scripts[$index]->href .= '?ver=' . $versionNumber;
+				    $delimiter = (sizeof($urlQuery) > 0) ? '&' : '?';
+				    $scripts[$index]->src .= $delimiter . 'versions=' . $versionNumber;
 				}
 			}
-		}		
+		}
 
 		return $html->save();
 	}
@@ -159,7 +210,6 @@ class Versions
 	{
 		ob_end_flush();
 	}
-
 		
 	/**
 	 * Generate a version number based on a files filemtime value.
@@ -171,9 +221,8 @@ class Versions
 	public static function generate_version_number($fileUrl)
 	{
 		$filePath = self::get_file_path_from_url($fileUrl);
-		
 		if(!$filePath) return FALSE; // If file was not found, abort.
-		
+
 		$filemtime = filemtime($filePath);
 		return $filemtime;
 	}
@@ -190,9 +239,13 @@ class Versions
 		$parsedUrl = parse_url($fileUrl);
 		
 		// If file is not on server, abort.
-		if($parsedUrl && isset($parsedUrl['host']) && $parsedUrl['host'] !== $_SERVER['HTTP_HOST']) return false;
+		if(!$parsedUrl) return false;
+		if(isset($parsedUrl['host']) && $parsedUrl['host'] !== $_SERVER['HTTP_HOST']) return false;
+		if(!isset($parsedUrl['path'])) return false;
 		
-		$filePath = $_SERVER['DOCUMENT_ROOT'] . $parsedUrl['path'];
+		$filePath = $_SERVER['DOCUMENT_ROOT'];
+		$filePath .= (!isset($parsedUrl['host'])) ? dirname($_SERVER['SCRIPT_NAME']) : '';
+		$filePath .= $parsedUrl['path'];
 		
 		return (file_exists($filePath)) ? $filePath : FALSE; // Returns filePath if file exists and FALSE if not.
 	}
@@ -206,10 +259,12 @@ class Versions
 	{
         register_setting( 'versions_group', 'versions_activation_setting_name' );
         register_setting( 'versions_group', 'versions_filter_setting_name' );
+        register_setting( 'versions_group', 'versions_catch_all_setting_name' );
 
 	    add_settings_section( 'versions_settings_section', __( 'Versions Settings', 'versions' ), array( __CLASS__, 'versions_settings_section_callback') , 'versions' );
         add_settings_field( 'versions_activation_setting_name', __( 'Activate Versions', 'versions' ), array( __CLASS__, 'versions_activation_setting_callback') , 'versions', 'versions_settings_section' );
         add_settings_field( 'versions_filter_setting_name', __( 'Filter method', 'versions' ), array( __CLASS__, 'versions_filter_setting_callback') , 'versions', 'versions_settings_section' );
+        add_settings_field( 'versions_catch_all_setting_name', __( 'Catch all', 'versions' ), array( __CLASS__, 'versions_catch_all_setting_callback') , 'versions', 'versions_settings_section' );
 
 	}
 
@@ -257,7 +312,6 @@ class Versions
         	'name' 		=> 'Activate Versions',
             'id' 		=> 'versions_activation_setting_name',
             'type' 		=> 'radio',
-            'desc' 		=> __( 'Activate Versions by selecting \'Yes\' and deactivate by selecting \'No\'.', 'versions' ),
             'options' 	=> array(
             	'yes' 		=> array(
             		'label' 		=> __('Yes', 'versions')
@@ -298,6 +352,29 @@ class Versions
 
         Versions::create_section_for_radio($options);
     }
+    
+    /**
+     * Callback for the "Catch all" setting on the Versions options page
+     *
+     * @access	public
+     */
+    public static function versions_catch_all_setting_callback()
+    {
+        $options = array(
+        	'name' 		=> 'Catch all',
+            'id' 		=> 'versions_catch_all_setting_name',
+            'type' 		=> 'checkbox',
+            'options' 	=> array(
+            	'active' 	=> array(
+            		'label' 		=> __( 'Active', 'versions' ),
+            		'description' 	=> __( 'If active, the catch-all handles all scripts\' and styles\' version numbers. Including those who already have a version number set. This is a preffered option to have active since the version numbers generated by the Versions plugin is more reliable and practical than those set manually.', 'versions' )
+            	),
+            ),
+            'std' 		=> 'active'
+        );
+
+        Versions::create_section_for_checkboxes($options);
+    }
 
     /**
      * Callback for the section on the Versions options page
@@ -315,7 +392,8 @@ class Versions
      * @access	public
      * @param	array
      */
-    public static function create_section_for_radio($value) {
+    public static function create_section_for_radio($value)
+    {
         foreach ($value['options'] as $option_name => $option_data) {
             $checked = ' ';
             if (get_option($value['id']) == $option_name) {
@@ -330,7 +408,38 @@ class Versions
             
             $output = '<div class="versions-radio">';
             $output .= '<label>';
-            $output .= '<input type="radio" name="'.$value['id'].'" value="'.$option_name.'"'.$checked.'"/>';
+            $output .= '<input type="radio" name="'.$value['id'].'" value="'.$option_name.'"'.$checked.'/>';
+            $output .= '<span>'.$option_data['label'].'</span></label>';
+            $output .= (isset($option_data['description']) && $option_data['description']) ? '<p>'.$option_data['description'].'</p>' : '';
+            $output .= '</div>';
+            
+            echo $output;
+        }
+    }
+    
+    /**
+     * Create checkboxes for Versions options page
+     *
+     * @access	public
+     * @param	array
+     */
+    public static function create_section_for_checkboxes($value)
+    {
+        foreach ($value['options'] as $option_name => $option_data) {
+            $checked = ' ';
+            if (get_option($value['id']) == $option_name) {
+                $checked = ' checked="checked" ';
+            }
+            else if (get_option($value['id']) === FALSE && $value['std'] == $option_name){
+                $checked = ' checked="checked" ';
+            }
+            else {
+                $checked = ' ';
+            }
+            
+            $output = '<div class="versions-checkbox">';
+            $output .= '<label>';
+            $output .= '<input type="checkbox" name="'.$value['id'].'" value="'.$option_name.'"'.$checked.'/>';
             $output .= '<span>'.$option_data['label'].'</span></label>';
             $output .= (isset($option_data['description']) && $option_data['description']) ? '<p>'.$option_data['description'].'</p>' : '';
             $output .= '</div>';

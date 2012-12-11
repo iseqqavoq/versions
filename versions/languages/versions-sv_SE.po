@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Versions 1.0\n"
-"POT-Creation-Date: 2012-12-06 10:18+0100\n"
-"PO-Revision-Date: 2012-12-06 10:25+0100\n"
+"POT-Creation-Date: 2012-12-11 11:58+0100\n"
+"PO-Revision-Date: 2012-12-11 12:00+0100\n"
 "Last-Translator: Thor Brink <thor@iseqqavoq.se>\n"
 "Language-Team: Iseqqavoq <info@iqq.se>\n"
 "Language: Svenska\n"
@@ -16,25 +16,29 @@ msgstr ""
 "X-Poedit-SearchPath-0: /Users/thorbrink/Sites/wordpress/wp-content/plugins/"
 "versions\n"
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:210
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:223
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:264
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:278
 msgid "Versions Settings"
 msgstr "Inställningar för Versions"
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:211
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:265
 msgid "Activate Versions"
 msgstr "Aktivera Versions"
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:212
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:266
 msgid "Filter method"
 msgstr "Filtreringsmetoder"
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:235
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:267
+msgid "Catch all"
+msgstr "Fånga allt"
+
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:290
 #, fuzzy
 msgid "Versions settings"
 msgstr "Inställningar för Versions"
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:241
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:296
 msgid ""
 "For any questions related to the Versions plugin, check out the plugin's "
 "page and support forum at <a href=\"http://wordpress.org/extend/plugins/"
@@ -45,29 +49,23 @@ msgstr ""
 "wordpress.org/extend/plugins/versions\" target=\"_blank\">WordPress</a> "
 "eller <a href=\"http://www.iqq.se/\" target=\"_blank\">Iseqqavoq.se</a>."
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:243
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:298
 msgid "Save Changes"
 msgstr "Spara ändringar"
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:260
-msgid "Activate Versions by selecting 'Yes' and deactivate by selecting 'No'."
-msgstr ""
-"Aktivera Versions genom att välja \"Ja\" och avaktivera genom att välja \"Nej"
-"\"."
-
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:263
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:317
 msgid "Yes"
 msgstr "Ja"
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:266
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:320
 msgid "No"
 msgstr "Nej"
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:288
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:342
 msgid "Default"
 msgstr "Standard"
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:289
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:343
 msgid ""
 "The default method filters through all of the HTML before it is sent to the "
 "browser. It detects and alters script- and link-tags that need a good "
@@ -80,11 +78,11 @@ msgstr ""
 "automatiska versionsnummer. Standardmetoden är att föredra om du inte har en "
 "djupare förståelse  för koden i ditt tema och/eller aktiva plugins."
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:292
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:346
 msgid "Advanced"
 msgstr "Avancerad"
 
-#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:293
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:347
 msgid ""
 "Use this method if you know that all of your scripts and styles are "
 "registered and enqueued from your theme and/or plugins. It alters only "
@@ -99,3 +97,25 @@ msgstr ""
 "wp_enqueue_script() - funktionen. Denna metod konsumerar lite mindre minne "
 "och exekveringstid. Den är riktad först och främst till användare som har en "
 "djupare förståelse för koden i tema och/eller plugins som är aktiva."
+
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:369
+msgid "Active"
+msgstr "Aktiv"
+
+#: /Users/thorbrink/Sites/wordpress/wp-content/plugins/versions/versions.php:370
+msgid ""
+"If active, the catch-all handles all scripts' and styles' version numbers. "
+"Including those who already have a version number set. This is a preffered "
+"option to have active since the version numbers generated by the Versions "
+"plugin is more reliable and practical than those set manually."
+msgstr ""
+"Om aktiv, kommer \"Fånga alla\" funktionen att hantera alla skript och "
+"stylesheets. Inklusive de smo redan har ett versionsnummer angivet. Detta är "
+"att föredra eftersom versionsnummer genererade av Versions är mer pålitliga "
+"och praktiska än de som man skriver manuellt."
+
+#~ msgid ""
+#~ "Activate Versions by selecting 'Yes' and deactivate by selecting 'No'."
+#~ msgstr ""
+#~ "Aktivera Versions genom att välja \"Ja\" och avaktivera genom att välja "
+#~ "\"Nej\"."
