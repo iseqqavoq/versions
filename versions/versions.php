@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Versions
-Plugin URI: http://URI_Of_Page_Describing_Plugin_and_Updates
-Description: A brief description of the Plugin.
-Version: 1.0
+Plugin URI: http://wordpress.org/extend/plugins/versions/
+Description: Plugin for generating version numbers on external resources automatically.
+Version: 1.0.1
 Author: Iseqqavoq
 Author URI: http://www.iqq.se
 License:
@@ -37,7 +37,7 @@ class Versions
                 if( strcmp ( $filter[0] , 'default' ) == 0 )
                 {
 	                add_action( 'plugins_loaded', array( __CLASS__, 'start_html_buffer' ) );
-                    add_action( 'wp_footer', array( __CLASS__, 'stop_html_buffer' ) );
+                    add_action( 'wp_footer', array( __CLASS__, 'stop_html_buffer' ), 999 );
                 }
                 else if( strcmp ( $filter[0] , 'advanced' ) == 0 )
                 {

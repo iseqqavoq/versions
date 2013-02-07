@@ -3,7 +3,7 @@ Contributors: iseqqavoq
 Tags: versions, speed, cache, versionnumber
 Requires at least: 3.0.1
 Tested up to: 3.4
-Stable tag: 1.0
+Stable tag: 1.0.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -31,5 +31,10 @@ Users with the ability to manage options are given the choices of switching betw
 == Screenshots ==
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+*Fixed a bug that caused the version numbers not be to be added to scripts loaded with wp_footer()
+*Added plugin description
+*Translation fixes
 
 = 1.0 =
