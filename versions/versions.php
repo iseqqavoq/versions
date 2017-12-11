@@ -172,7 +172,9 @@ class Versions
 	 */
 	public static function filter_output( $buffer )
 	{
-		include_once('simple_html_dom.php');
+		if (!class_exists('simple_html_dom_node')) {
+			include_once('simple_html_dom.php');
+		}
 		
 		$catchAll = get_option('versions_catch_all_setting');
 		
